@@ -30,13 +30,6 @@ parse_dates = [
 ]
 
 
-
-# Read a sample of the data
-prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/'
-url = f'{prefix}yellow_tripdata_{year}-{month:02d}.csv.gz'
-
-
-
 def run():
     year = 2021
     month = 1
@@ -50,6 +43,10 @@ def run():
     chunk_size = 100000
 
     table_name = 'yellow_taxi_data'
+
+    # Read a sample of the data
+    prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/'
+    url = f'{prefix}yellow_tripdata_{year}-{month:02d}.csv.gz'
 
 
     df = pd.read_csv(
