@@ -1,10 +1,9 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import pandas as pd
 from sqlalchemy import create_engine
 from tqdm.auto import tqdm # use to see the progress in loading chunk
 import click
+
+zone_url = 'https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv'
 
 dtype = {
     "VendorID": "Int64",
@@ -43,6 +42,19 @@ parse_dates = [
 @click.option('--month', default=1, type=int, help='Month of the data')
 @click.option('--chunk-size', default=100000, type=int, help='Chunk size fro reading CSV')
 
+def zone_data(url, pg_user, pg_pass, pg_host, pg_port, pg_db):
+    table_name = 'zones'
+
+    df_zones = pd.read_csv(url)
+    # df_zones.head(5)
+
+    engine = create_engine(f'postgresql+psycopg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}') #Connect DB
+
+
+    df_zones.head(n=0).to_sql(name=f'{table_name}', con=engine, if_exists='replace') # insert only header in db
+
+    df_zones.to_sql(name=f'{table_name}', con=engine, if_exists='append')
+
 def run(pg_user, pg_pass, pg_host, pg_port, pg_db, table_name, year, month, chunk_size):
 
     # year = 2021
@@ -62,11 +74,11 @@ def run(pg_user, pg_pass, pg_host, pg_port, pg_db, table_name, year, month, chun
     url = f'{prefix}yellow_tripdata_{year}-{month:02d}.csv.gz'
 
 
-    df = pd.read_csv(
-        url,
-        dtype=dtype,
-        parse_dates=parse_dates
-    )
+    # df = pd.read_csv(
+    #     url,
+    #     dtype=dtype,
+    #     parse_dates=parse_dates
+    # )
 
     engine = create_engine(f'postgresql+psycopg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}') #Connect DB
 
@@ -95,6 +107,8 @@ def run(pg_user, pg_pass, pg_host, pg_port, pg_db, table_name, year, month, chun
             con=engine, 
             if_exists='append')
 # df = next(df_iter) # next iter
+
+    zone_data(zone_url, pg_user, pg_pass, pg_host, pg_port, pg_db)
 
 
 if __name__ == '__main__':
